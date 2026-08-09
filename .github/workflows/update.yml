@@ -1,0 +1,36 @@
+name: Daily Relative Strength Update
+
+on:
+  schedule:
+    - cron: '30 10 * * 1-5' # Runs Mon-Fri at 4:00 PM IST
+  workflow_dispatch: # Enables the "Run workflow" button
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Grants permission to commit data.json back to repo
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install yfinance pandas
+
+      - name: Fetch Market Data
+        run: |
+          python fetch_data.py
+
+      - name: Commit and Push Updated Data
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions@github.com"
+          git add data.json
+          git commit -m "Auto-update RS data [skip ci]" || exit 0
+          git push
